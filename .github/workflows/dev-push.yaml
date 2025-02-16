@@ -1,0 +1,48 @@
+---
+name: "'dev' branch container build and integrate to 'docker.io' registry"
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  dev-container-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Super-Linter
+        uses: super-linter/super-linter@v5
+        env:
+          VALIDATE_DOCKERFILE: true
+          # DEFAULT_BRANCH: dev
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # DOCKERFILE_FILE_NAME: Containerfile
+
+      - name: Set up packages 
+        # QEMU for aarch64 (if using emulation)
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes qemu-user-static binfmt-support podman
+          sudo update-binfmts --enable qemu-aarch64
+          
+      - name: Repository registry login
+        run: |
+          echo "${{ secrets.DOCKERIO_TOKEN }}" | /usr/bin/podman login \
+            --username "${{ secrets.DOCKERIO_REGISTRY }}" \
+            --password-stdin docker.io
+
+      - name: Build Container Image for aarch64 using Podman
+        run: |
+          /usr/bin/podman build --arch aarch64 --no-cache \
+           --tag heimdall:dev --file Containerfile .
+
+
+      - name: Push Container Image to Registry docker.io
+        run: |
+          IMG="docker.io/${{ secrets.DOCKERIO_REGISTRY }}"
+          IMG="$IMG/heimdall:dev"
+          /usr/bin/podman tag "heimdall:dev" $IMG 
+          /usr/bin/podman push $IMG
