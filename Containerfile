@@ -18,6 +18,9 @@ RUN /usr/sbin/usermod -d /home/$USER -m $USER
 RUN /usr/sbin/groupmod -n $USER alpine
 RUN /bin/echo "$USER:$USER" | /usr/sbin/chpasswd
 
+# Set shell to /bin/ash and enable pipefail for Alpine-based images
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+
 # ╭―
 # │ PRIVILEGES
 # ╰――――――――――――――――――――
