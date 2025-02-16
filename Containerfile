@@ -37,13 +37,11 @@ COPY entrypoint /etc/container/entrypoint
 # ╭―
 # │ APPLICATION        
 # ╰――――――――――――――――――――
-ARG CONTAINER_VERSION="2.6.1"
-ARG HEIMDALL_SERVER_VERSION="$CONTAINER_VERSION"
-ARG HEIMDALL_SERVER_BRANCH=v"$HEIMDALL_SERVER_VERSION"
+ARG HEIMDALL_VERSION="2.6.3"
 
 WORKDIR /home/heimdall
 RUN git config --global advice.detachedHead false
-RUN git clone --branch $HEIMDALL_SERVER_BRANCH --depth 1 https://github.com/linuxserver/Heimdall.git www
+RUN git clone --branch "v$HEIMDALL_VERSION" --depth 1 https://github.com/linuxserver/Heimdall.git www
 
 RUN /sbin/apk add --no-cache nginx php83 php83-ctype php83-curl php83-dom php83-fileinfo php83-mbstring php83-openssl php83-pdo php83-session php83-tokenizer php83-xml php83-pdo_sqlite php83-zip php83-fpm
 
