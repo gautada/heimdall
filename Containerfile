@@ -9,17 +9,18 @@ LABEL source="https://github.com/gautada/heimdall-container.git"
 LABEL maintainer="Adam Gautier <adam@gautier.org>"
 LABEL description="A container for heimdall application dashboard"
 
+# Set shell to /bin/ash and enable pipefail for Alpine-based images
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+
 # ╭―
 # │ USER
 # ╰――――――――――――――――――――
 ARG USER=heimdall
-RUN /usr/sbin/usermod -l $USER alpine
-RUN /usr/sbin/usermod -d /home/$USER -m $USER
-RUN /usr/sbin/groupmod -n $USER alpine
-RUN /bin/echo "$USER:$USER" | /usr/sbin/chpasswd
+RUN /usr/sbin/usermod -l $USER alpine \
+ && /usr/sbin/usermod -d /home/$USER -m $USER \
+ && /usr/sbin/groupmod -n $USER alpine \
+ && /bin/echo "$USER:$USER" | /usr/sbin/chpasswd
 
-# Set shell to /bin/ash and enable pipefail for Alpine-based images
-SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
 # ╭―
 # │ PRIVILEGES
@@ -43,19 +44,18 @@ COPY entrypoint /etc/container/entrypoint
 ARG HEIMDALL_VERSION="2.6.3"
 
 WORKDIR /home/heimdall
-RUN git config --global advice.detachedHead false
-RUN git clone --branch "v$HEIMDALL_VERSION" --depth 1 https://github.com/linuxserver/Heimdall.git www
-
-RUN /sbin/apk add --no-cache nginx php83 php83-ctype php83-curl php83-dom php83-fileinfo php83-mbstring php83-openssl php83-pdo php83-session php83-tokenizer php83-xml php83-pdo_sqlite php83-zip php83-fpm
-
-RUN /bin/rm /etc/nginx/http.d/*
+RUN git config --global advice.detachedHead false \
+ && git clone --branch "v$HEIMDALL_VERSION" --depth 1 https://github.com/linuxserver/Heimdall.git www \
+ && /sbin/apk add --no-cache nginx php83 php83-ctype php83-curl php83-dom php83-fileinfo php83-mbstring \
+    php83-openssl php83-pdo php83-session php83-tokenizer php83-xml php83-pdo_sqlite php83-zip php83-fpm \
+ && /bin/rm /etc/nginx/http.d/*
 COPY http.conf /etc/nginx/http.d/http.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 # COPY php.ini /etc/php83/php.ini
 COPY www.conf /etc/php83/php-fpm.d/www.conf
 # COPY php-fpm.conf /etc/php83/php-fpm.conf
-RUN /bin/touch /var/log/php83/error.log /var/log/php83/www.access.log
-RUN /bin/chmod 777 -R /var/log/php83
+RUN /bin/touch /var/log/php83/error.log /var/log/php83/www.access.log \
+ && /bin/chmod 777 -R /var/log/php83
 
 WORKDIR /home/$USER/www
 
